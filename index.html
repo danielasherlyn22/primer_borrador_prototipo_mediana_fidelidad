@@ -319,6 +319,8 @@ body.inv .guide{display:flex}
 .testbar b{font-family:var(--display);font-size:18px;flex:1}
 .testbar button{border:2px solid #1A1A1A;background:#1A1A1A;color:#fff;border-radius:12px;padding:10px 14px;font-weight:800;min-height:44px}
 .gate [hidden]{display:none!important}
+.testbar[hidden]{display:none}
+.testbar button:disabled{background:#fff;color:#1A1A1A}
 .gate{position:absolute;inset:0;z-index:80;background:#F2F2F2;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:28px 22px;overflow-y:auto}
 .gate h2{font-family:var(--display);font-size:26px;line-height:1.15;margin:0}
 .gate p{margin:0;color:#4A4A4A}
@@ -333,6 +335,18 @@ body.inv .guide{display:flex}
 }
 @media (max-width:420px){
   .phone{width:100%;height:760px;padding:6px;border-radius:38px}
+}
+@media (max-width:520px){
+  .wrap{padding:6px 6px 0;gap:0}
+  .col{width:100%;max-width:400px;height:100vh;height:100dvh;gap:6px;padding-bottom:6px}
+  .testbar{padding:6px 10px;flex:none;border-radius:12px}
+  .testbar b{font-size:15px}
+  .testbar button{padding:6px 12px;min-height:38px;font-size:13px}
+  .phone{width:100%;height:auto;flex:1;min-height:0;padding:8px;border-radius:34px}
+  .screen{border-radius:26px}
+  .notch{width:84px;height:20px;top:6px}
+  .scr{padding-top:34px}
+  .gate{padding:24px 20px}
 }
 </style>
 </head>
@@ -370,7 +384,7 @@ body.inv .guide{display:flex}
     <button type="button" class="greset" id="reset">Reiniciar el prototipo</button>
     <div class="gcard"><h3>Registros de la prueba</h3><div class="logs" id="logs"><p>Cargando…</p></div></div>
   </aside>
-  <div class="col"><div class="phone"><div class="screen" id="app" aria-live="polite"></div></div></div>
+  <div class="col"><div class="testbar" id="testbar" hidden><b id="tb-label">Tarea 1 de 5</b><button type="button" id="tb-done">Terminé esta tarea</button></div><div class="phone"><div class="screen" id="app" aria-live="polite"></div></div></div>
 </div>
 <script>
 /* ---------- Íconos e ilustraciones (originales, SVG en línea) ---------- */
@@ -504,8 +518,8 @@ const DQ=[
 
 /* Números de ejemplo por perfil. Comercio: por semana. Servicios: por mes (sus ingresos varían). */
 const NUM={
- comercio:{per:'esta semana',inNeg:700,inPer:500,outNeg:700,outPer:650,prev:[[900,700],[1100,800],[950,600]],lab:['sem 1','sem 2','sem 3','esta'],hor:435,horN:11,gus:275},
- servicios:{per:'este mes',inNeg:1800,inPer:2000,outNeg:1650,outPer:2450,prev:[[3200,2600],[2900,3200],[3600,2900]],lab:['ago','sep','oct','nov'],hor:380,horN:9,gus:310}};
+ comercio:{per:'esta semana',inNeg:320,inPer:0,outNeg:175,outPer:210,prev:[],lab:['esta semana'],hor:435,horN:11,gus:275},
+ servicios:{per:'este mes',inNeg:1800,inPer:2000,outNeg:1650,outPer:2450,prev:[],lab:['este mes'],hor:380,horN:9,gus:310}};
 /* Fechas: hoy es jueves 12 de noviembre de 2026 */
 const HOY=new Date(2026,10,12);
 const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
@@ -537,10 +551,8 @@ function fresh(){return{
  login:{mail:'fer@correo.com'},
  recs:[
   {d:'Ayer',t:'in',s:'negocio',cat:'Venta del día',det:'Pay de queso',m:320},
-  {d:'Dom',t:'out',s:'negocio',cat:'Ingredientes / mercancía',det:'Pay de queso',m:175},
-  {d:'Sáb',t:'out',s:'personal',cat:'Comida',det:'Comida corrida',m:60},
-  {d:'Vie',t:'out',s:'personal',cat:'Gustos',det:'Café',m:45,h:true},
-  {d:'Vie',t:'in',s:'personal',cat:'Me mandan de mi casa',det:'',m:500}],
+  {d:'Lun',t:'out',s:'negocio',cat:'Ingredientes / mercancía',det:'Pay de queso',m:175},
+  {d:'Lun',t:'out',s:'personal',cat:'Comida',det:'Comida de la semana',m:210}],
  newRec:-1,
  rt:'in',rs:'negocio',rcat:null,rdet:'',rotro:'',rdetOtro:'',rerr:false,rh:false,monto:'',reto:false,retoDone:false,regHoy:false,
  nt:'semana',nf:'todo',
@@ -591,7 +603,7 @@ function weekOut(){return outNeg()+outPer()}
 function hormigas(){return N().hor+hoyRecs().filter(r=>r.h).reduce((a,r)=>a+r.m,0)}
 function hormigasN(){return N().horN+hoyRecs().filter(r=>r.h).length}
 function gustos(){return N().gus+hoyRecs().filter(r=>r.cat==='Gustos').reduce((a,r)=>a+r.m,0)}
-function racha(){return S.day==='primer'?(S.regHoy?1:0):(S.regHoy?6:5)}
+function racha(){return S.day==='primer'?(S.regHoy?1:0):(S.regHoy?2:1)}
 function stage(m){const p=m.ah/m.meta;return p<.25?0:p<.5?1:p<1?2:3}
 const STN=['semilla','brote','arbolito','con frutos'];
 function fechaTxt(iso){const d=new Date(iso+'T12:00:00');return `${d.getDate()} de ${MESES[d.getMonth()]}${d.getFullYear()!==2026?' de '+d.getFullYear():''}`}
@@ -677,14 +689,11 @@ SC.inicio=()=>{const ser=servicios();const n=N();
  const wi=weekIn(),wo=weekOut(),q=wi-wo;
  const lesson=S.lessonDone?{t:'Sigue: M1 · Lo que entra no es lo que gano',m:'8 min'}:(ser?{t:'Sigue: M1 · Gastos hormiga',m:'9 min'}:{t:'Sigue: M1 · Gastos hormiga',m:'9 min'});
  return `<div class="scr">
- <div class="between"><div><div class="sub">Jueves 12 de noviembre</div><h2 class="t">Hola, ${esc(S.name)}</h2></div><span class="pill pk" style="font-size:.9em">${ic('flame',16)} ${racha()} días</span></div>
+ <div class="between"><div><div class="sub">Jueves 12 de noviembre</div><h2 class="t">Hola, ${esc(S.name)}</h2></div><span class="pill pk" style="font-size:.9em">${ic('flame',16)} ${racha()} ${racha()===1?'día':'días'}</span></div>
  <div class="lb">Tu plan de hoy</div>
  <button type="button" class="mission ${S.regHoy?'done':''}" data-act="goRegistro"><span class="ck">${S.regHoy?ic('check',16):''}</span><span class="mt" style="flex:1"><b>Registra lo de hoy</b><div class="sub">1 min</div></span>${ic('chev',18)}</button>
  <button type="button" class="mission ${S.lessonDone?'done':''}" data-act="startLesson"><span class="ck">${S.lessonDone?ic('check',16):''}</span><span class="mt" style="flex:1"><b>${lesson.t}</b><div class="sub">${lesson.m}</div></span>${ic('chev',18)}</button>
  <button type="button" class="mission ${S.retoDone||S.planSaved?'done':''}" data-act="${S.reto?'goReto':'goPresu'}"><span class="ck">${S.retoDone||S.planSaved?ic('check',16):''}</span><span class="mt" style="flex:1"><b>${S.reto||S.retoDone?'Reto: anota tus gastos hormiga':'Reto: arma tu presupuesto'}</b><div class="sub">${S.reto||S.retoDone?'día 1 de 3':'5 min'}</div></span>${ic('chev',18)}</button>
- ${S.cfg.tip&&!S.tipClosed?`<div class="card nude"><div class="between"><span class="lb">Tip del día</span><button type="button" class="ib" style="width:32px;height:32px;background:transparent;box-shadow:none" data-act="closeTip" aria-label="Cerrar tip">${ic('close',16)}</button></div>
-  ${samTip('Anota los gastos de hoy antes de que se te escapen de la memoria.','feliz',44)}
-  <button type="button" class="btn ghost" style="align-self:flex-start;padding:0;min-height:30px" data-act="startLesson">Ver la lección →</button></div>`:''}
  <div class="card">
   <div class="between"><h3 class="t">Tus números</h3><span class="pill">${n.per}</span></div>
   <div class="grid3 center" style="text-align:center">
@@ -693,11 +702,15 @@ SC.inicio=()=>{const ser=servicios();const n=N();
    <div><div class="sub">${q>=0?'Te queda':'Te pasaste por'}</div><b class="num ${q>=0?'money-in':'money-warn'}" style="font-size:1.15em">${$m(Math.abs(q))}</b></div></div>
   ${q<0?`<div class="fb warn">${samira(36,'piensa')}<span>${N().per[0].toUpperCase()+N().per.slice(1)} tus gastos van <b>${$m(-q)}</b> arriba de tus ingresos. ${servicios()?'Tranqui: el 15 te pagan $1,150.':'Tranqui: con lo que vendas en los próximos días se puede equilibrar.'} ¿Vemos juntas en qué se fue?</span></div>`:''}
   ${barsChart()}
-  <div class="legend"><span><i style="background:var(--inc)"></i>ingresos</span><span><i style="background:var(--gas)"></i>gastos</span><span><i style="background:var(--amber)"></i>gastos de más</span></div>
+  <div class="legend"><span><i style="background:var(--inc)"></i>ingresos</span><span><i style="background:var(--gas)"></i>gastos</span>${q<0?'<span><i style="background:var(--amber)"></i>te pasaste</span>':''}</div>
   ${pieBlock(ser?[['Comida',35],['Transporte',20],['Programas',15],['Otros',30]]:[['Ingredientes',45],['Comida',20],['Gustos',20],['Otros',15]])}
   ${ser?'<span class="pill ok" style="align-self:flex-start">Por cobrar: $1,150 el 15 nov</span>':''}
   <button type="button" class="btn sm" data-act="toNumeros" style="align-self:flex-start">Ver más detalles</button>
- </div></div>`};
+ </div>
+ ${S.cfg.tip&&!S.tipClosed?`<div class="card nude"><div class="between"><span class="lb">Tip del día</span><button type="button" class="ib" style="width:32px;height:32px;background:transparent;box-shadow:none" data-act="closeTip" aria-label="Cerrar tip">${ic('close',16)}</button></div>
+  ${samTip('Anota los gastos de hoy antes de que se te escapen de la memoria.','feliz',44)}
+  <button type="button" class="btn ghost" style="align-self:flex-start;padding:0;min-height:30px" data-act="startLesson">Ver la lección →</button></div>`:''}
+</div>`};
 function barsChart(){const d=[...N().prev,[weekIn(),weekOut()]];const mx=Math.max(...d.flat())*1.05;const lab=N().lab;
  return `<div class="bars" role="img" aria-label="Barras de ingresos y gastos">${d.map((p,i)=>`<div class="pair"><div><i class="in" style="height:${p[0]/mx*100}px"></i><i class="out ${p[1]>p[0]?'over':''}" style="height:${p[1]/mx*100}px"></i></div><small>${lab[i]}</small></div>`).join('')}</div>`}
 const PIEC=['#B4B4B4','#BEBEBE','#5E5E5E','#DCDCDC'];
@@ -1556,20 +1569,22 @@ S.pcat='Comida y bebidas';
 const SHEET_URL='https://script.google.com/macros/s/AKfycbzp9cwzlxa0Nc0Rgw-TEUidTzjwojCfM7Y5li4tfEJPzbJqLYXvLR35E-sVN7NcNVlW/exec';
 if(location.hash==='#investigadora')document.body.classList.add('inv');
 const INV=document.body.classList.contains('inv');
+const NT=5;const TB=document.getElementById('testbar'),TBL=document.getElementById('tb-label'),TBD=document.getElementById('tb-done');
 let LOG=null,GATE=INV?null:'codigo',dbRef=null,sendT=null,sending=false,sentEv=0,lastSig='';
 const hora=d=>d.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
 function vista(){return S.screen+(S.liaOpen?' + asistente':'')+(S.modal?' + ventana '+S.modal:'')+(S.addOpen?' + agregar':'')}
 function logEv(tipo,o){if(!LOG)return;const now=new Date();
- LOG.ev.push(Object.assign({t:now.getTime()-LOG.t0,hora:hora(now),tipo,pantalla:S.screen},o||{}));LOG.ultima=hora(now);persist()}
-function resumen(){const ruta=[];LOG.ev.filter(x=>x.tipo==='pantalla').forEach(x=>{if(ruta[ruta.length-1]!==x.vista)ruta.push(x.vista)});
- const last=LOG.ev.length?LOG.ev[LOG.ev.length-1].t:0;
- return{minutos:Math.round(last/600)/100,toques:LOG.ev.filter(x=>x.tipo==='toque').length,
-  sin_respuesta:LOG.ev.filter(x=>x.tipo==='toque sin respuesta').length,pantallas:ruta.length,ruta:ruta.join(' → ')}}
+ LOG.ev.push(Object.assign({t:now.getTime()-LOG.t0,hora:hora(now),tarea:LOG.tarea,tipo,pantalla:S.screen},o||{}));LOG.ultima=hora(now);persist()}
+function resumen(){return LOG.tareas.map(tk=>{const ev=LOG.ev.filter(x=>x.tarea===tk.n);const ruta=[];
+ ev.filter(x=>x.tipo==='pantalla').forEach(x=>{if(ruta[ruta.length-1]!==x.vista)ruta.push(x.vista)});
+ const fin=tk.fin!=null?tk.fin:(ev.length?ev[ev.length-1].t:tk.inicio);
+ return{tarea:tk.n,terminada:tk.fin!=null,segundos:Math.round((fin-tk.inicio)/1000),toques:ev.filter(x=>x.tipo==='toque').length,
+  sin_respuesta:ev.filter(x=>x.tipo==='toque sin respuesta').length,termino_en:tk.termino_en||'',ruta:ruta.join(' → ')}})}
 function persist(){try{localStorage.setItem('proto-registro-'+LOG.codigo+'-'+LOG.id,JSON.stringify(LOG))}catch(_){}
  clearTimeout(sendT);sendT=setTimeout(sendAll,4000)}
 function sendAll(){sendSheet();saveDb()}
 function sendSheet(){if(!LOG||sending||!/^https:\/\//.test(SHEET_URL))return;const upto=LOG.ev.length;if(upto===sentEv)return;
- const body={id:LOG.id,codigo:LOG.codigo,fecha:LOG.fecha,inicio:LOG.inicio,ultima:LOG.ultima,resumen:resumen(),eventos:LOG.ev.slice(sentEv,upto)};
+ const body={id:LOG.id,codigo:LOG.codigo,fecha:LOG.fecha,inicio:LOG.inicio,ultima:LOG.ultima,terminadas:LOG.tareas.filter(t=>t.fin!=null).length,resumen:resumen(),eventos:LOG.ev.slice(sentEv,upto)};
  sending=true;
  try{fetch(SHEET_URL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
   .then(()=>{sentEv=Math.max(sentEv,upto);sending=false;if(LOG.ev.length>sentEv)persist()},()=>{sending=false;setTimeout(sendSheet,10000)})}
@@ -1601,8 +1616,16 @@ function drawGate(){let g=app.querySelector('.gate');if(!GATE){if(g)g.remove();r
  if(g.dataset.k===GATE)return;g.dataset.k=GATE;g.innerHTML=gateCode()}
 
 function startTest(code){S=fresh();S.pcat='Comida y bebidas';GATE=null;const now=new Date();
- LOG={codigo:code,id:now.toISOString().replace(/[:.]/g,'-'),fecha:now.toLocaleDateString('es-MX'),inicio:hora(now),ultima:hora(now),t0:now.getTime(),ev:[]};
- lastSig='';render();logEv('inicio')}
+ LOG={codigo:code,id:now.toISOString().replace(/[:.]/g,'-'),fecha:now.toLocaleDateString('es-MX'),inicio:hora(now),ultima:hora(now),t0:now.getTime(),tarea:1,tareas:[{n:1,inicio:0}],ev:[]};
+ lastSig='';TB.hidden=false;TBL.textContent='Tarea 1 de '+NT;TBD.textContent='Terminé esta tarea';TBD.disabled=false;render();logEv('inicio de tarea')}
+TBD.addEventListener('click',()=>{if(!LOG||LOG.tarea>NT)return;logEv('terminé la tarea');
+ const cur=LOG.tareas[LOG.tarea-1];cur.fin=Date.now()-LOG.t0;cur.termino_en=vista();
+ if(LOG.tarea<NT){LOG.tarea++;LOG.tareas.push({n:LOG.tarea,inicio:Date.now()-LOG.t0});
+  S.hist=[];S.liaOpen=false;S.addOpen=false;S.modal=null;S.screen='inicio';lastSig='';
+  TBL.textContent='Tarea '+LOG.tarea+' de '+NT;TBD.textContent=LOG.tarea===NT?'Terminé la última tarea':'Terminé esta tarea';
+  const sc=app.querySelector('.scr');if(sc)sc.scrollTop=0;render();logEv('inicio de tarea')}
+ else{LOG.tarea=NT+1;TBL.textContent='Tareas terminadas';TBD.textContent='Listo ✓';TBD.disabled=true;S.hist=[];S.liaOpen=false;S.addOpen=false;S.modal=null;S.screen='inicio';const sc=app.querySelector('.scr');if(sc)sc.scrollTop=0;render()}
+ clearTimeout(sendT);sendAll()});
 app.addEventListener('click',e=>{
  if(e.target.closest('#g-go')){const i=document.getElementById('g-code');const v=(i.value||'').trim().toUpperCase();
   if(!v){document.getElementById('g-err').hidden=false;i.classList.add('bad');i.focus();return}startTest(v)}});
